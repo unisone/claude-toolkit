@@ -1,0 +1,33 @@
+{
+  "name": "@unisone/claude-toolkit",
+  "version": "1.0.0",
+  "description": "Professional AI coding toolkit — techdebt scanner + git worktree parallelization. Works with Claude Code, Cursor, Codex, or any AI coding tool.",
+  "keywords": [
+    "claude-code",
+    "ai-coding",
+    "techdebt",
+    "git-worktrees",
+    "developer-tools",
+    "code-quality"
+  ],
+  "author": "Alex Zay (https://github.com/unisone)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/unisone/claude-toolkit"
+  },
+  "bin": {
+    "techdebt": "./bin/techdebt",
+    "worktrees": "./bin/worktrees"
+  },
+  "files": [
+    "bin/",
+    "skills/",
+    "scripts/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}
