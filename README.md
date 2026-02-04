@@ -4,6 +4,8 @@
 
 [![npm version](https://badge.fury.io/js/%40unisone%2Fclaude-toolkit.svg)](https://www.npmjs.com/package/@unisone/claude-toolkit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org/)
+[![Code Quality](https://github.com/unisone/claude-toolkit/workflows/Code%20Quality/badge.svg)](https://github.com/unisone/claude-toolkit/actions)
 
 Two essential tools that supercharge AI-powered development workflows. Works with **Claude Code**, **Cursor**, **Codex**, or any AI coding assistant.
 
@@ -217,14 +219,59 @@ npx @unisone/claude-toolkit techdebt --summary
 
 ## Why This Toolkit?
 
-### AI coding tools excel at *writing* code. This toolkit excels at *maintaining* it.
+### The AI Coding Velocity Problem
 
-**Problem:** AI assistants can generate code faster than humans can review it. Technical debt accumulates quickly.
+**AI assistants ship fast. Quality control can't keep up.**
 
-**Solution:**  
-✅ **Techdebt scanner** catches quality issues automatically  
-✅ **Worktree manager** enables parallel AI agents without conflicts  
-✅ **Both tools** designed for AI-first workflows
+When you have Claude, Cursor, or Codex generating thousands of lines per session:
+- **Technical debt accumulates faster than humans can review**
+- **Parallel agents create branch chaos** (Agent A conflicts with Agent B)
+- **Context switching kills productivity** (branch checkout = rebuild = 5min lost)
+- **Type safety erodes** (`any` types slip through, `@ts-ignore` proliferates)
+- **Dead code piles up** (commented blocks, failed experiments)
+
+This toolkit solves both problems: **automated quality checks** + **conflict-free parallelization**.
+
+### The Parallel Agents Trend
+
+**Worktrees are becoming the standard for AI-native development:**
+
+- **[Codex macOS app](https://codexmac.com)** — Uses worktrees for multi-agent orchestration
+- **[AirOps](https://www.airops.com/)** — Built `worktree-cli` for parallel agent workflows
+- **[Medium articles](https://medium.com/search?q=git+worktrees+ai)** — Growing coverage of worktree patterns for AI coding
+- **[Boris Cherny (2019)](https://spin.atomicobject.com/2016/06/26/parallelize-development-git-worktrees/)** — Pioneered parallel worktree development
+
+**Why now?** AI agents made parallelization essential. Traditional branch-switching workflows break when you have:
+- 3 agents refactoring different modules simultaneously
+- Production hotfix needed while feature branch is mid-build
+- Experimental refactor running alongside stable development
+
+Git worktrees solve this. This toolkit makes them **trivial to use**.
+
+### Comparison: Techdebt Scanner vs Alternatives
+
+| Feature | claude-toolkit | SonarQube | ESLint | GitHub Advanced Security |
+|---------|----------------|-----------|--------|--------------------------|
+| **Zero config** | ✅ Works out of box | ❌ Complex setup | ⚠️ Needs config | ❌ Enterprise only |
+| **Lightweight** | ✅ Bash script | ❌ Java server | ✅ Node package | ❌ Cloud service |
+| **AI-workflow native** | ✅ Built for AI coding | ❌ Traditional CI/CD | ⚠️ General purpose | ❌ Security focus |
+| **Duplicate detection** | ✅ `--duplicates` flag | ✅ Advanced | ❌ Separate tool | ❌ Not included |
+| **File size limits** | ✅ Built-in | ⚠️ Via custom rules | ❌ Manual | ❌ Not applicable |
+| **Dead code detection** | ✅ Commented blocks | ✅ Advanced | ⚠️ Limited | ❌ Not included |
+| **Type safety gaps** | ✅ TypeScript focused | ✅ Multi-language | ⚠️ Linting only | ❌ Not included |
+| **Dependency audit** | ✅ `npm audit` integration | ✅ Advanced | ❌ Separate tool | ✅ Dependabot |
+| **JSON output for CI** | ✅ `--json` flag | ✅ REST API | ⚠️ Custom formatter | ✅ API |
+| **Threshold filtering** | ✅ `--threshold` flag | ✅ Quality gates | ❌ Manual | ⚠️ Custom rules |
+| **Auto-fix** | ✅ `--fix` flag | ⚠️ Limited | ✅ `--fix` flag | ❌ Manual |
+| **Cost** | ✅ Free (MIT) | ⚠️ Free tier limited | ✅ Free (MIT) | ❌ Paid enterprise |
+
+**When to use what:**
+- **claude-toolkit** — Daily AI coding workflows, fast feedback, zero setup
+- **SonarQube** — Enterprise CI/CD, compliance requirements, multi-repo dashboards
+- **ESLint** — JavaScript/TypeScript linting, strict style enforcement
+- **GitHub Advanced Security** — Security vulnerability scanning, enterprise compliance
+
+**Combine them!** Use `claude-toolkit` for fast local checks, ESLint for style, SonarQube for team dashboards.
 
 ### Real-World Use Cases
 
@@ -233,6 +280,7 @@ npx @unisone/claude-toolkit techdebt --summary
 3. **Multi-agent refactoring** — Spawn 3 agents in 3 worktrees, merge when done
 4. **PR quality gates** — Fail CI if critical techdebt detected
 5. **Code archaeology** — Use analysis worktree for safe exploration
+6. **A/B implementation testing** — Try two approaches in parallel worktrees, keep the best
 
 ## Documentation
 
@@ -255,21 +303,48 @@ npx @unisone/claude-toolkit techdebt --summary
 
 Contributions welcome! This is a community-driven toolkit.
 
-**Ideas:**
-- Add support for more languages (Python, Go, Rust)
-- Integrate with more AI coding tools
-- Add custom techdebt rules
-- Improve duplicate detection algorithms
+See **[CONTRIBUTING.md](CONTRIBUTING.md)** for:
+- Development workflow
+- Conventional commit guidelines
+- Testing procedures
+- High-priority contribution areas
 
-**Workflow:**
-1. Fork the repo
-2. Create a feature branch
-3. Run `techdebt --fix` before committing 😉
-4. Submit a PR
+**Quick start:**
+```bash
+# Fork and clone
+git clone https://github.com/YOUR-USERNAME/claude-toolkit
+cd claude-toolkit
+
+# Make changes
+git checkout -b feat/my-feature
+
+# Test using dogfooding!
+./skills/techdebt/scripts/scan.sh
+./skills/techdebt/scripts/scan.sh --fix
+
+# Commit and PR
+git commit -m "feat: add Python support"
+git push origin feat/my-feature
+```
+
+## Documentation
+
+- **[README.md](README.md)** — Main documentation (this file)
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — Contribution guidelines
+- **[CHANGELOG.md](CHANGELOG.md)** — Release history
+- **[examples/](examples/)** — Usage examples and patterns
+  - [CI Integration](examples/ci-integration.md)
+  - [Worktree Patterns](examples/worktree-patterns.md)
+  - [Sample Output](examples/sample-output.md)
+- **Skills:**
+  - [Techdebt Scanner](skills/techdebt/SKILL.md)
+  - [Worktree Manager](scripts/worktrees/README.md)
 
 ## License
 
 MIT © [Alex Zay](https://github.com/unisone)
+
+See [LICENSE](LICENSE) for full text.
 
 ---
 
