@@ -2,7 +2,13 @@
 set -euo pipefail
 
 # Techdebt Scanner - Automated code quality detection
-# Usage: ./scan.sh [directory] [--fix] [--summary]
+# Usage: ./scan.sh [directory] [options]
+#
+# Exit Codes:
+#   0 - No critical or high-priority issues found
+#   1 - Critical issues found (must fix before merge)
+#   2 - High-priority issues found (fix this sprint)
+#   3 - Invalid arguments or configuration error
 
 # Colors for output
 RED='\033[0;31m'
@@ -18,6 +24,9 @@ FUNCTION_SIZE_WARNING=50
 DUPLICATE_THRESHOLD=10
 FIX_MODE=false
 SUMMARY_ONLY=false
+JSON_OUTPUT=false
+ENABLE_DUPLICATES=false
+THRESHOLD_LEVEL=""
 
 # Check for help first
 if [[ "${1:-}" == "--help" ]] || [[ "${1:-}" == "-h" ]]; then
@@ -28,20 +37,33 @@ USAGE:
   $0 [directory] [options]
 
 OPTIONS:
-  --fix       Auto-fix safe issues (imports, formatting)
-  --summary   Show summary only, skip detailed output
-  --help      Show this help text
+  --fix               Auto-fix safe issues (imports, formatting)
+  --summary           Show summary only, skip detailed output
+  --json              Output results in JSON format (for CI integration)
+  --duplicates        Enable duplicate code detection (slower)
+  --threshold LEVEL   Only report issues at or above level (critical|high|medium|low)
+  --help              Show this help text
 
 EXAMPLES:
-  $0                           # Scan current directory
-  $0 /path/to/project          # Scan specific directory
-  $0 --fix                     # Scan and auto-fix safe issues
-  $0 /path/to/project --summary  # Quick summary only
+  $0                                    # Scan current directory
+  $0 /path/to/project                   # Scan specific directory
+  $0 --fix                              # Scan and auto-fix safe issues
+  $0 /path/to/project --summary         # Quick summary only
+  $0 --json > report.json               # JSON output for CI
+  $0 --threshold high                   # Only show high + critical issues
+  $0 --duplicates --threshold critical  # Find dupes, only show critical
 
-OUTPUT:
-  Exit code 0: No critical issues
-  Exit code 1: Critical issues found
-  Exit code 2: High-priority issues found
+EXIT CODES:
+  0 - No issues at or above threshold
+  1 - Critical issues found (must fix before merge)
+  2 - High-priority issues found (fix this sprint)
+  3 - Invalid arguments or configuration error
+
+THRESHOLD LEVELS:
+  critical - Only show critical issues (file size violations, security vulns)
+  high     - Show critical + high priority (type gaps, dead code)
+  medium   - Show critical + high + medium (TODOs, outdated deps)
+  low      - Show all issues (default)
 EOF
   exit 0
 fi
@@ -60,10 +82,32 @@ while [[ $# -gt 0 ]]; do
       SUMMARY_ONLY=true
       shift
       ;;
+    --json)
+      JSON_OUTPUT=true
+      SUMMARY_ONLY=true  # JSON mode implies no verbose output
+      shift
+      ;;
+    --duplicates)
+      ENABLE_DUPLICATES=true
+      shift
+      ;;
+    --threshold)
+      if [[ -z "${2:-}" ]]; then
+        echo "Error: --threshold requires a level (critical|high|medium|low)"
+        exit 3
+      fi
+      THRESHOLD_LEVEL="${2,,}"  # Convert to lowercase
+      if [[ ! "$THRESHOLD_LEVEL" =~ ^(critical|high|medium|low)$ ]]; then
+        echo "Error: Invalid threshold level '$2'"
+        echo "Valid levels: critical, high, medium, low"
+        exit 3
+      fi
+      shift 2
+      ;;
     -*)
       echo "Unknown option: $1"
       echo "Use --help for usage information"
-      exit 1
+      exit 3
       ;;
     *)
       TARGET_DIR="$1"
@@ -71,6 +115,12 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Validate target directory
+if [[ ! -d "$TARGET_DIR" ]]; then
+  echo "Error: Directory not found: $TARGET_DIR"
+  exit 3
+fi
 
 # Load config if exists
 CONFIG_FILE="$TARGET_DIR/.techdebt.json"
@@ -367,7 +417,11 @@ check_dead_code
 check_technical_debt_markers
 check_type_safety
 check_dependencies
-# check_duplicates  # Disabled by default (expensive)
+
+# Only run duplicate detection if explicitly enabled
+if [[ "$ENABLE_DUPLICATES" == true ]]; then
+  check_duplicates
+fi
 
 #━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # OUTPUT RESULTS
@@ -411,31 +465,82 @@ if [[ "$SUMMARY_ONLY" == false ]]; then
   fi
 fi
 
-# Summary
-echo ""
-echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}  SUMMARY${NC}"
-echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${RED}Critical:${NC} $CRITICAL_COUNT"
-echo -e "${YELLOW}High:${NC}     $HIGH_COUNT"
-echo -e "${BLUE}Medium:${NC}   $MEDIUM_COUNT"
-echo -e "${GREEN}Low:${NC}      $LOW_COUNT"
-echo "Total:    $((CRITICAL_COUNT + HIGH_COUNT + MEDIUM_COUNT + LOW_COUNT)) issues"
-echo ""
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# APPLY THRESHOLD FILTER
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-# Recommended actions
-if [[ $CRITICAL_COUNT -gt 0 ]] || [[ $HIGH_COUNT -gt 0 ]]; then
+# If threshold is set, zero out counts below threshold
+if [[ -n "$THRESHOLD_LEVEL" ]]; then
+  case "$THRESHOLD_LEVEL" in
+    critical)
+      HIGH_COUNT=0
+      MEDIUM_COUNT=0
+      LOW_COUNT=0
+      ;;
+    high)
+      MEDIUM_COUNT=0
+      LOW_COUNT=0
+      ;;
+    medium)
+      LOW_COUNT=0
+      ;;
+    low)
+      # Show all (default)
+      ;;
+  esac
+fi
+
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# OUTPUT JSON OR SUMMARY
+#━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+if [[ "$JSON_OUTPUT" == true ]]; then
+  # JSON output for CI integration
+  cat <<EOF
+{
+  "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+  "scannedPath": "$TARGET_DIR",
+  "summary": {
+    "critical": $CRITICAL_COUNT,
+    "high": $HIGH_COUNT,
+    "medium": $MEDIUM_COUNT,
+    "low": $LOW_COUNT,
+    "total": $((CRITICAL_COUNT + HIGH_COUNT + MEDIUM_COUNT + LOW_COUNT))
+  },
+  "threshold": "${THRESHOLD_LEVEL:-none}",
+  "duplicatesEnabled": $ENABLE_DUPLICATES,
+  "exitCode": $(( CRITICAL_COUNT > 0 ? 1 : HIGH_COUNT > 0 ? 2 : 0 ))
+}
+EOF
+else
+  # Human-readable summary
+  echo ""
+  echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${BLUE}  SUMMARY${NC}"
+  echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+  echo -e "${RED}Critical:${NC} $CRITICAL_COUNT"
+  echo -e "${YELLOW}High:${NC}     $HIGH_COUNT"
+  echo -e "${BLUE}Medium:${NC}   $MEDIUM_COUNT"
+  echo -e "${GREEN}Low:${NC}      $LOW_COUNT"
+  echo "Total:    $((CRITICAL_COUNT + HIGH_COUNT + MEDIUM_COUNT + LOW_COUNT)) issues"
+  [[ -n "$THRESHOLD_LEVEL" ]] && echo "Threshold: $THRESHOLD_LEVEL"
+  echo ""
+fi
+
+# Recommended actions (skip in JSON mode)
+if [[ "$JSON_OUTPUT" == false ]] && ([[ $CRITICAL_COUNT -gt 0 ]] || [[ $HIGH_COUNT -gt 0 ]]); then
   echo -e "${BLUE}RECOMMENDED ACTIONS${NC}"
   echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
   [[ $CRITICAL_COUNT -gt 0 ]] && echo "1. Fix critical issues before merging"
   [[ $HIGH_COUNT -gt 0 ]] && echo "2. Address high-priority issues this sprint"
   echo "3. Run auto-fix: $0 --fix"
-  echo "4. Generate report: ./skills/techdebt/scripts/report.sh > techdebt-report.md"
+  echo "4. Run with duplicates: $0 --duplicates"
+  echo "5. CI integration: $0 --json --threshold high"
   echo ""
 fi
 
-# Auto-fix mode
-if [[ "$FIX_MODE" == true ]]; then
+# Auto-fix mode (skip in JSON mode)
+if [[ "$FIX_MODE" == true ]] && [[ "$JSON_OUTPUT" == false ]]; then
   echo "Auto-fix mode enabled..."
   
   # Fix with eslint if available
