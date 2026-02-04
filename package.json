@@ -12,20 +12,36 @@
   ],
   "author": "Alex Zay (https://github.com/unisone)",
   "license": "MIT",
+  "homepage": "https://github.com/unisone/claude-toolkit#readme",
   "repository": {
     "type": "git",
     "url": "https://github.com/unisone/claude-toolkit"
+  },
+  "bugs": {
+    "url": "https://github.com/unisone/claude-toolkit/issues"
   },
   "bin": {
     "techdebt": "./bin/techdebt",
     "worktrees": "./bin/worktrees"
   },
+  "scripts": {
+    "test": "echo \"Running techdebt self-check...\" && ./skills/techdebt/scripts/scan.sh --threshold high",
+    "test:full": "./skills/techdebt/scripts/scan.sh",
+    "test:json": "./skills/techdebt/scripts/scan.sh --json",
+    "lint": "./skills/techdebt/scripts/scan.sh --summary",
+    "quality-check": "./skills/techdebt/scripts/scan.sh --threshold high --summary",
+    "fix": "./skills/techdebt/scripts/scan.sh --fix",
+    "prepublishOnly": "npm run quality-check"
+  },
   "files": [
     "bin/",
     "skills/",
     "scripts/",
+    "examples/",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=18"
