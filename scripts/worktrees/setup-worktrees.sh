@@ -18,10 +18,16 @@ Git Worktree Setup - Create parallel development environments
 
 USAGE:
   $0 <repo-path> [worktree-names...]
+  $0 --clean <repo-path> [--force]
 
 ARGUMENTS:
   repo-path          Path to git repository (will be main worktree)
   worktree-names     Names for additional worktrees (default: feature-a feature-b analysis)
+
+OPTIONS:
+  --clean            Teardown/remove all worktrees (calls teardown script)
+  --force            Skip confirmation prompts (with --clean)
+  --help             Show this help text
 
 EXAMPLES:
   # Default setup (3 worktrees: feature-a, feature-b, analysis)
@@ -32,6 +38,12 @@ EXAMPLES:
 
   # Single additional worktree
   $0 ~/Projects/my-app experiment
+
+  # Clean up all worktrees
+  $0 --clean ~/Projects/my-app
+
+  # Force cleanup without prompts
+  $0 --clean ~/Projects/my-app --force
 
 WHAT IT DOES:
   1. Creates parallel worktrees in parent directory
@@ -61,10 +73,25 @@ EOF
   exit 0
 fi
 
+# Check for --clean mode first
+if [[ "${1:-}" == "--clean" ]]; then
+  shift
+  TEARDOWN_SCRIPT="$(dirname "$0")/teardown-worktrees.sh"
+  
+  if [[ ! -f "$TEARDOWN_SCRIPT" ]]; then
+    echo "Error: Teardown script not found at: $TEARDOWN_SCRIPT"
+    exit 1
+  fi
+  
+  # Pass remaining arguments to teardown script
+  exec "$TEARDOWN_SCRIPT" "$@"
+fi
+
 # Validate arguments
 if [[ $# -lt 1 ]]; then
   echo "Error: Repository path required"
   echo "Usage: $0 <repo-path> [worktree-names...]"
+  echo "       $0 --clean <repo-path> [--force]"
   echo "Run '$0 --help' for more information"
   exit 1
 fi
@@ -84,7 +111,23 @@ PARENT_DIR=$(dirname "$REPO_PATH")
 # Validate it's a git repo
 if [[ ! -d "$REPO_PATH/.git" ]]; then
   echo "Error: $REPO_PATH is not a git repository"
+  echo "Initialize a git repository first: git init"
   exit 1
+fi
+
+# Check for uncommitted changes in main repo
+cd "$REPO_PATH"
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo -e "${YELLOW}⚠ Warning: Uncommitted changes in main repository${NC}"
+  git status --short
+  echo ""
+  read -p "Continue anyway? [y/N] " -n 1 -r
+  echo ""
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Aborted. Commit or stash changes first."
+    exit 1
+  fi
+  echo ""
 fi
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
