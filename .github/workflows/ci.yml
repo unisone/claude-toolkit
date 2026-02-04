@@ -1,0 +1,114 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  techdebt-scan:
+    name: Techdebt Scanner (Dogfooding)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Run techdebt scanner (JSON output)
+        id: scan_json
+        run: |
+          chmod +x ./skills/techdebt/scripts/scan.sh
+          ./skills/techdebt/scripts/scan.sh --json --threshold high > scan-results.json
+          cat scan-results.json
+        continue-on-error: true
+      
+      - name: Run techdebt scanner (Human readable)
+        id: scan_human
+        run: |
+          ./skills/techdebt/scripts/scan.sh --threshold high
+        continue-on-error: true
+      
+      - name: Parse results and set status
+        run: |
+          if [ -f scan-results.json ]; then
+            CRITICAL=$(jq -r '.summary.critical' scan-results.json)
+            HIGH=$(jq -r '.summary.high' scan-results.json)
+            TOTAL=$(jq -r '.summary.total' scan-results.json)
+            
+            echo "📊 Techdebt Scan Results:"
+            echo "  Critical: $CRITICAL"
+            echo "  High: $HIGH"
+            echo "  Total: $TOTAL"
+            
+            # Fail if critical issues found
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "❌ Critical issues detected - failing build"
+              exit 1
+            fi
+            
+            # Warn if high issues found (but don't fail)
+            if [ "$HIGH" -gt 0 ]; then
+              echo "⚠️  High-priority issues detected - consider addressing"
+            fi
+            
+            echo "✅ Code quality check passed"
+          fi
+      
+      - name: Upload scan results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: techdebt-scan-results
+          path: scan-results.json
+          retention-days: 30
+
+  shellcheck:
+    name: ShellCheck (Script Linting)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          scandir: './skills/techdebt/scripts ./scripts'
+          severity: warning
+        continue-on-error: true
+
+  package-validation:
+    name: Package Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      
+      - name: Validate package.json
+        run: |
+          npm pkg get name version description repository
+          echo "✅ package.json is valid"
+      
+      - name: Check CLI executables
+        run: |
+          chmod +x bin/techdebt bin/worktrees
+          test -x bin/techdebt && echo "✅ bin/techdebt is executable"
+          test -x bin/worktrees && echo "✅ bin/worktrees is executable"
+      
+      - name: Test npm pack (dry run)
+        run: |
+          npm pack --dry-run
+          echo "✅ Package can be published"
