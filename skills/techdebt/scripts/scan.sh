@@ -96,7 +96,7 @@ while [[ $# -gt 0 ]]; do
         echo "Error: --threshold requires a level (critical|high|medium|low)"
         exit 3
       fi
-      THRESHOLD_LEVEL="${2,,}"  # Convert to lowercase
+      THRESHOLD_LEVEL="$(echo "$2" | tr '[:upper:]' '[:lower:]')"  # Convert to lowercase
       if [[ ! "$THRESHOLD_LEVEL" =~ ^(critical|high|medium|low)$ ]]; then
         echo "Error: Invalid threshold level '$2'"
         echo "Valid levels: critical, high, medium, low"
@@ -237,10 +237,13 @@ check_dead_code() {
   done < <(find "$TARGET_DIR" "${EXCLUDE_ARGS[@]}" \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \) -type f -print0)
 
   # Find unreachable code after return (basic pattern)
+  # Exclude ternary expressions (contains both ? and :) and comments
   grep -rn "return.*;.*[^/]" "$TARGET_DIR" \
     --include="*.ts" --include="*.tsx" --include="*.js" --include="*.jsx" \
     --exclude-dir=node_modules --exclude-dir=dist --exclude-dir=build 2>/dev/null | \
-    grep -v "return.*return" | head -20 | while read -r line; do
+    grep -v "return.*return" | \
+    grep -v "return.*?.*:" | \
+    head -20 | while read -r line; do
       echo "[DEAD_CODE] $line" >> "$HIGH_FILE"
       echo "  → Possible unreachable code after return" >> "$HIGH_FILE"
       echo "" >> "$HIGH_FILE"
@@ -335,7 +338,8 @@ check_dependencies() {
   if command -v npm &> /dev/null; then
     local outdated=$(npm outdated --json 2>/dev/null || echo "{}")
     if [[ "$outdated" != "{}" ]] && command -v jq &> /dev/null; then
-      local count=$(echo "$outdated" | jq 'length')
+      local count=$(echo "$outdated" | jq 'length' | tr -d '\n\r' | grep -oE '^[0-9]+$' | head -1)
+      count=${count:-0}
       if [[ $count -gt 0 ]]; then
         echo "[DEPENDENCY] package.json" >> "$MEDIUM_FILE"
         echo "  $count outdated dependencies" >> "$MEDIUM_FILE"
@@ -348,7 +352,8 @@ check_dependencies() {
     # Check for security vulnerabilities
     local audit=$(npm audit --json 2>/dev/null || echo '{"metadata":{"vulnerabilities":{"total":0}}}')
     if command -v jq &> /dev/null; then
-      local vuln_count=$(echo "$audit" | jq -r '.metadata.vulnerabilities.total // 0')
+      local vuln_count=$(echo "$audit" | jq -r '.metadata.vulnerabilities.total // 0' | tr -d '\n\r' | grep -oE '^[0-9]+$' | head -1)
+      vuln_count=${vuln_count:-0}
       if [[ $vuln_count -gt 0 ]]; then
         echo "[DEPENDENCY] package.json" >> "$CRITICAL_FILE"
         echo "  $vuln_count security vulnerabilities" >> "$CRITICAL_FILE"
