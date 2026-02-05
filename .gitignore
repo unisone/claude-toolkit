@@ -34,3 +34,4 @@ build/
 *.log
 .techdebt.json
 techdebt-report.md
+*.tgz
