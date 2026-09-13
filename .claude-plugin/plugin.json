@@ -1,7 +1,7 @@
 {
   "name": "claude-toolkit",
-  "version": "1.0.0",
-  "description": "Professional AI coding toolkit: tech-debt scanner skill plus git worktree parallelization scripts for AI coding workflows.",
+  "version": "1.1.0",
+  "description": "Professional AI coding toolkit: tech-debt scanner skill, git worktree parallelization, and agent skills for PR review, evals, code graphs, and Fable 5.1 delegation.",
   "author": {
     "name": "unisone",
     "url": "https://github.com/unisone"

@@ -1,6 +1,6 @@
 # Claude Toolkit
 
-> Professional AI coding toolkit — techdebt scanner + git worktree parallelization
+> Professional AI coding toolkit — tech-debt scanner, git worktree parallelization, and agent skills for PR review, evals, code graphs, and Fable 5.1 delegation
 
 [![npm version](https://badge.fury.io/js/%40unisone%2Fclaude-toolkit.svg)](https://www.npmjs.com/package/@unisone/claude-toolkit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
