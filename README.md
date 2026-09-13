@@ -134,19 +134,29 @@ zb  # → frontend work (in parallel!)
 
 ## Claude Code Integration
 
-### 1. Install the Techdebt Skill
+### 1. Install the Skills
 
-Drop the skill into your Claude workspace:
+Drop any skill into your Claude workspace:
 
 ```bash
-# Copy SKILL.md to your .claude/skills/ directory
+# Techdebt scanner — end-of-session code quality pass
 cp skills/techdebt/SKILL.md ~/.claude/skills/techdebt.md
 
-# Or create a symlink for auto-updates
+# PR review — senior-engineer-quality pull request reviews
+cp skills/pr-review/SKILL.md ~/.claude/skills/pr-review.md
+
+# Agent evals — eval suites with LLM-as-judge rubrics for prompts and agents
+cp skills/agent-evals/SKILL.md ~/.claude/skills/agent-evals.md
+
+# Or symlink for auto-updates
 ln -s $(pwd)/skills/techdebt/SKILL.md ~/.claude/skills/techdebt.md
 ```
 
-Now Claude can run techdebt scans automatically at the end of coding sessions!
+| Skill | What it does |
+|-------|--------------|
+| `techdebt` | Scan and fix code quality issues at the end of a coding session |
+| `pr-review` | Review a GitHub PR like a senior engineer — blocking findings separated from nits |
+| `agent-evals` | Build eval suites for prompts, skills, and agents with LLM-as-judge scoring |
 
 ### 2. Multi-Agent Worktree Pattern
 
@@ -351,4 +361,5 @@ See [LICENSE](LICENSE) for full text.
 **Built for the AI coding era. Maintained by humans (for now).**
 
 Questions? Open an issue or find me on [X/Twitter](https://twitter.com/alexzay_).
+
 
