@@ -1,0 +1,11 @@
+{
+  "name": "claude-toolkit",
+  "version": "1.0.0",
+  "description": "Professional AI coding toolkit: tech-debt scanner skill plus git worktree parallelization scripts for AI coding workflows.",
+  "author": {
+    "name": "unisone",
+    "url": "https://github.com/unisone"
+  },
+  "license": "MIT",
+  "repository": "https://github.com/unisone/claude-toolkit"
+}

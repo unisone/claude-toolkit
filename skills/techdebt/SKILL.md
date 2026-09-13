@@ -1,3 +1,11 @@
+---
+name: techdebt
+description: Scan and fix code quality issues at the end of a coding session. Use when wrapping up implementation work, before opening a PR, or when a codebase needs a debt pass. Detects duplicated code, dead code, TODO/FIXME markers, type safety gaps, and dependency hygiene issues.
+license: MIT
+metadata:
+  author: unisone
+---
+
 # Techdebt Cleanup Skill
 
 Scan and fix code quality issues at the end of any coding session.
@@ -320,3 +328,4 @@ git commit -m "chore: techdebt - extract validator, add types"
 - `skills/dev-workflow/SKILL.md` - Development workflow
 - `skills/reflect-learn/SKILL.md` - Learning from errors
 - `.learnings/ERRORS.md` - Historical mistakes to avoid
+
