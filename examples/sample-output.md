@@ -11,7 +11,7 @@ $ techdebt ~/Projects/my-app
   TECHDEBT SCAN RESULTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Scanned: /Users/dev/Projects/my-app
-Date: 2025-02-03 22:30:15
+Date: 2026-09-13 22:30:15
 
 Running checks...
 
@@ -129,7 +129,7 @@ $ techdebt ~/Projects/my-app --json
 
 ```json
 {
-  "timestamp": "2025-02-03T22:30:15Z",
+  "timestamp": "2026-09-13T22:30:15Z",
   "scannedPath": "/Users/dev/Projects/my-app",
   "summary": {
     "critical": 3,
@@ -183,7 +183,7 @@ $ techdebt ~/Projects/my-app --duplicates --threshold critical
   TECHDEBT SCAN RESULTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Scanned: /Users/dev/Projects/my-app
-Date: 2025-02-03 22:35:42
+Date: 2026-09-13 22:35:42
 
 Running checks...
 
@@ -238,7 +238,7 @@ $ techdebt ~/Projects/my-app --fix
   TECHDEBT SCAN RESULTS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Scanned: /Users/dev/Projects/my-app
-Date: 2025-02-03 22:40:18
+Date: 2026-09-13 22:40:18
 
 Running checks...
 
@@ -317,7 +317,7 @@ $ techdebt ~/Projects/my-app --json | jq -r '.summary.critical'
 
 $ techdebt ~/Projects/my-app --json | jq 'select(.summary.critical > 0)'
 {
-  "timestamp": "2025-02-03T22:30:15Z",
+  "timestamp": "2026-09-13T22:30:15Z",
   "scannedPath": "/Users/dev/Projects/my-app",
   "summary": {...},
   "threshold": "none",
@@ -346,3 +346,4 @@ if [ "$CRITICAL" -gt 0 ]; then
     -d "{\"text\": \"⚠️ Critical techdebt detected: $CRITICAL issues\"}"
 fi
 ```
+

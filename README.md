@@ -312,7 +312,7 @@ See **[CONTRIBUTING.md](CONTRIBUTING.md)** for:
 **Quick start:**
 ```bash
 # Fork and clone
-git clone https://github.com/YOUR-USERNAME/claude-toolkit
+git clone https://github.com/unisone/claude-toolkit
 cd claude-toolkit
 
 # Make changes
@@ -351,3 +351,4 @@ See [LICENSE](LICENSE) for full text.
 **Built for the AI coding era. Maintained by humans (for now).**
 
 Questions? Open an issue or find me on [X/Twitter](https://twitter.com/alexzay_).
+

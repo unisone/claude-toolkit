@@ -357,9 +357,7 @@ git branch -D old-branch
 ## See Also
 
 - [Git Worktree Docs](https://git-scm.com/docs/git-worktree)
-- Boris Cherny's talk: [Parallel Development with Git Worktrees](https://www.youtube.com/watch?v=1234) (TODO: find actual link)
-- `skills/multi-agent/SKILL.md` — Multi-agent development patterns
-- `skills/dev-workflow/SKILL.md` — Development workflow
+- `skills/techdebt/SKILL.md` — Tech-debt scanning patterns
 
 ## Scripts
 
@@ -386,3 +384,4 @@ cd feature-b  # Context preserved
 ```
 
 **Your brain stays in flow state. Your tools keep running. Your work gets done.**
+
