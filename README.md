@@ -148,6 +148,9 @@ cp skills/pr-review/SKILL.md ~/.claude/skills/pr-review.md
 # Agent evals — eval suites with LLM-as-judge rubrics for prompts and agents
 cp skills/agent-evals/SKILL.md ~/.claude/skills/agent-evals.md
 
+# Code graph — build and query a knowledge graph of your codebase
+cp skills/code-graph/SKILL.md ~/.claude/skills/code-graph.md
+
 # Or symlink for auto-updates
 ln -s $(pwd)/skills/techdebt/SKILL.md ~/.claude/skills/techdebt.md
 ```
@@ -157,6 +160,7 @@ ln -s $(pwd)/skills/techdebt/SKILL.md ~/.claude/skills/techdebt.md
 | `techdebt` | Scan and fix code quality issues at the end of a coding session |
 | `pr-review` | Review a GitHub PR like a senior engineer — blocking findings separated from nits |
 | `agent-evals` | Build eval suites for prompts, skills, and agents with LLM-as-judge scoring |
+| `code-graph` | Build and query a knowledge graph of a codebase — blast-radius analysis, callers, cycles |
 
 ### 2. Multi-Agent Worktree Pattern
 
@@ -361,5 +365,6 @@ See [LICENSE](LICENSE) for full text.
 **Built for the AI coding era. Maintained by humans (for now).**
 
 Questions? Open an issue or find me on [X/Twitter](https://twitter.com/alexzay_).
+
 
 
